@@ -1,0 +1,45 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '1.2.3'
+}
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'org.scde.StellarCoreElasticsearchIndexer'
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven {
+        url "https://maven.elasticsearch.org/releases"
+    }
+    flatDir {
+        dirs 'lib'
+    }
+}
+
+dependencies {
+    // Database
+    compile 'org.jdbi:jdbi:2.75'
+    compile 'postgresql:postgresql:9.1-901.jdbc4'
+
+    // Stellar
+    compile name: 'stellar-sdk'
+
+    // Elasticsearch
+    compile 'org.elasticsearch:elasticsearch:2.3.5'
+    compile 'org.elasticsearch.plugin:shield:2.2.0'
+
+    // Logging
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile group: 'ch.qos.logback', name:'logback-classic', version: '1.0.13'
+    compile group: 'ch.qos.logback', name:'logback-core', version: '1.0.13'
+
+    // Testing
+    testCompile 'junit:junit:4.12'
+}
+
+shadowJar {
+    baseName = 'stellar-core-es-indexer'
+    classifier = null
+    version = null
+}
