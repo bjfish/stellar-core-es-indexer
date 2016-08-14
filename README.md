@@ -39,3 +39,33 @@ See LICENSE file.
 - Index more operations
 - Document json objects
 - Example Queries
+
+## Elasticsearch Data Examples
+
+### Transaction:
+`"_id": "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889"`     
+`"_type": "transaction"`
+```
+   {
+     "status": "txSUCCESS",
+     "created_at": "2015-09-30T17:15:54.000Z",
+     "source_account": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+   }
+```
+
+### Payment
+`"_id": "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889-0"`
+`-0` is the index of the operation within the transaction.
+     
+`"_type": "payment"`
+
+```
+   {  
+      "status":"txSUCCESS",
+      "created_at":"2015-09-30T17:15:54.000Z",
+      "amount":9.999999995999997E10,
+      "asset":"XLM",
+      "source_account":"GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7",
+      "to":"GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
+   }
+```
