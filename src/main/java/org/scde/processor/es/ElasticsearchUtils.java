@@ -56,10 +56,10 @@ public class ElasticsearchUtils {
                 .field("status", getStatus(txHistoryWrapper))
                 .field("created_at", txHistoryWrapper.getLedgerCloseTime())
                 .field("amount",  scaleAmount(paymentOp.getAmount()))
-                .field("asset", getAssetString(paymentOp.getAsset()))
                 .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
-                .field("to", accountIdToString(paymentOp.getDestination()))
-                .endObject();
+                .field("to", accountIdToString(paymentOp.getDestination()));
+            setAssetFields(source, paymentOp.getAsset());
+            source.endObject();
         } catch (IOException e) {
             logger.error("Error serializing payment", e);
         }
@@ -74,10 +74,10 @@ public class ElasticsearchUtils {
                 .field("status", getStatus(txHistoryWrapper))
                 .field("created_at", txHistoryWrapper.getLedgerCloseTime())
                 .field("amount",  scaleAmount(pathPaymentOp.getDestAmount())) // TODO Normalize with horizon, add send amount, idea -> add send amount to payment
-                .field("asset", getAssetString(pathPaymentOp.getDestAsset()))
                 .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
-                .field("to", accountIdToString(pathPaymentOp.getDestination()))
-                .endObject();
+                .field("to", accountIdToString(pathPaymentOp.getDestination()));
+            setAssetFields(source, pathPaymentOp.getDestAsset());
+            source.endObject();
         } catch (IOException e) {
             logger.error("Error serializing payment", e);
         }
@@ -108,18 +108,18 @@ public class ElasticsearchUtils {
      * @param asset
      * @return
      */
-    public static String getAssetString(Asset asset) {
-        String result;
+    public static void setAssetFields(XContentBuilder source, Asset asset) throws IOException {
         if (asset.getDiscriminant() == AssetType.ASSET_TYPE_NATIVE) {
-            result = "XLM";
+            source.field("asset_type", "native");
         } else if (asset.getDiscriminant() == AssetType.ASSET_TYPE_CREDIT_ALPHANUM4) {
-            String issuer = accountIdToString(asset.getAlphaNum4().getIssuer());
-            result = new String(asset.getAlphaNum4().getAssetCode()) + "-" + issuer;
+            source.field("asset_issuer", accountIdToString(asset.getAlphaNum4().getIssuer()));
+            source.field("asset_code", new String(asset.getAlphaNum4().getAssetCode()));
+            source.field("asset_type", "credit_alphanum4");
         } else {
-            String issuer = accountIdToString(asset.getAlphaNum12().getIssuer());
-            result = new String(asset.getAlphaNum12().getAssetCode()) + "-" + issuer;
+            source.field("asset_issuer", accountIdToString(asset.getAlphaNum12().getIssuer()));
+            source.field("asset_code", new String(asset.getAlphaNum4().getAssetCode()));
+            source.field("asset_type", "credit_alphanum12");
         }
-        return result;
     }
 
     public static String getStatus(TxHistoryWrapper txHistoryWrapper) {
