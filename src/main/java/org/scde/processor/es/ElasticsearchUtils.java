@@ -14,6 +14,9 @@ import org.stellar.sdk.KeyPair;
 import org.stellar.sdk.xdr.AccountID;
 import org.stellar.sdk.xdr.Asset;
 import org.stellar.sdk.xdr.AssetType;
+import org.stellar.sdk.xdr.CreateAccountOp;
+import org.stellar.sdk.xdr.Int64;
+import org.stellar.sdk.xdr.PathPaymentOp;
 import org.stellar.sdk.xdr.PaymentOp;
 
 import java.io.IOException;
@@ -37,6 +40,7 @@ public class ElasticsearchUtils {
                 .field("status", getStatus(txHistoryWrapper))
                 .field("created_at", txHistoryWrapper.getLedgerCloseTime())
                 .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
+                .field("operation_count", txHistoryWrapper.getTransactionEnvelope().getTx().getOperations().length)
                 .endObject();
         } catch (IOException e) {
             logger.error("Error serializing transaction", e);
@@ -51,7 +55,7 @@ public class ElasticsearchUtils {
                 .startObject()
                 .field("status", getStatus(txHistoryWrapper))
                 .field("created_at", txHistoryWrapper.getLedgerCloseTime())
-                .field("amount",  BigDecimal.valueOf(paymentOp.getAmount().getInt64()).divide(AMOUNT_SCALE_FACTOR) )   // Double.valueOf(paymentOp.getAmount().getInt64()) / AMOUNT_SCALE_FACTOR
+                .field("amount",  scaleAmount(paymentOp.getAmount()))
                 .field("asset", getAssetString(paymentOp.getAsset()))
                 .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
                 .field("to", accountIdToString(paymentOp.getDestination()))
@@ -62,6 +66,40 @@ public class ElasticsearchUtils {
         return source;
     }
 
+    public static XContentBuilder getPathPaymentSource(TxHistoryWrapper txHistoryWrapper, PathPaymentOp pathPaymentOp) {
+        XContentBuilder source = null;
+        try {
+            source = jsonBuilder()
+                .startObject()
+                .field("status", getStatus(txHistoryWrapper))
+                .field("created_at", txHistoryWrapper.getLedgerCloseTime())
+                .field("amount",  scaleAmount(pathPaymentOp.getDestAmount())) // TODO Normalize with horizon, add send amount, idea -> add send amount to payment
+                .field("asset", getAssetString(pathPaymentOp.getDestAsset()))
+                .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
+                .field("to", accountIdToString(pathPaymentOp.getDestination()))
+                .endObject();
+        } catch (IOException e) {
+            logger.error("Error serializing payment", e);
+        }
+        return source;
+    }
+
+    public static XContentBuilder getCreateAccountSource(TxHistoryWrapper txHistoryWrapper, int operationIndex, CreateAccountOp createAccountOp) {
+        XContentBuilder source = null;
+        try {
+            source = jsonBuilder()
+                .startObject()
+                .field("status", getStatus(txHistoryWrapper))
+                .field("created_at", txHistoryWrapper.getLedgerCloseTime())
+                .field("starting_balance",  scaleAmount(createAccountOp.getStartingBalance()) )
+                .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
+                .field("account", accountIdToString(createAccountOp.getDestination()))
+                .endObject();
+        } catch (IOException e) {
+            logger.error("Error serializing payment", e);
+        }
+        return source;
+    }
 
     /**
      * Native - "XLM"
@@ -90,6 +128,10 @@ public class ElasticsearchUtils {
 
     public static String accountIdToString(AccountID accountID) {
         return KeyPair.fromPublicKey(accountID.getAccountID().getEd25519().getUint256()).getAccountId();
+    }
+
+    public static BigDecimal scaleAmount(Int64 amount){
+        return BigDecimal.valueOf(amount.getInt64()).divide(AMOUNT_SCALE_FACTOR);
     }
 
     public static Client getClient(SCEIApplicationConfig config) {

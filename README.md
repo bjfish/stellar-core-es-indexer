@@ -50,6 +50,7 @@ See LICENSE file.
      "status": "txSUCCESS",
      "created_at": "2015-09-30T17:15:54.000Z",
      "source_account": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+     "operation_count": 2
    }
 ```
 
@@ -68,4 +69,18 @@ See LICENSE file.
       "source_account":"GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7",
       "to":"GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
    }
+```
+
+### Create Account
+`"_id": "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889-0"`     
+`"_type": "create-account"`
+
+```
+{  
+   "status":"txSUCCESS",
+   "created_at":"2015-09-30T17:15:54.000Z",
+   "starting_balance":20.0,
+   "source_account":"GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7",
+   "account":"GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
+}
 ```

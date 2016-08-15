@@ -30,7 +30,9 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
 
     private static final String ES_TYPE_TRANSACTION = "transaction";
     private static final String ES_TYPE_PAYMENT = "payment";
+    private static final String ES_TYPE_CREATE_ACCOUNT = "create-account";
     public static final String ES_ELASTIC_CLOUD = "elastic-cloud";
+    private static final String ES_TYPE_PATH_PAYMENT = "path-payment";
 
 
     private final Client client;
@@ -75,7 +77,10 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
 
     @Override
     public void visitCreateAccount(CreateAccountOp createAccountOp, TxHistoryWrapper txHistoryWrapper, int operationIndex) {
-
+        IndexRequest indexRequest = getCreateAccountIndexRequest(txHistoryWrapper, operationIndex, createAccountOp);
+        if (indexRequest != null) {
+            bulkProcessor.add(indexRequest);
+        }
     }
 
     @Override
@@ -87,8 +92,11 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
     }
 
     @Override
-    public void visitPathPaymentOp(PathPaymentOp paymentOp, TxHistoryWrapper txHistoryWrapper, int operationIndex) {
-
+    public void visitPathPaymentOp(PathPaymentOp pathPaymentOp, TxHistoryWrapper txHistoryWrapper, int operationIndex) {
+        IndexRequest indexRequest = getPathPaymentIndexRequest(txHistoryWrapper, operationIndex, pathPaymentOp);
+        if (indexRequest != null) {
+            bulkProcessor.add(indexRequest);
+        }
     }
 
     @Override
@@ -127,8 +135,12 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
     }
 
     public IndexRequest getTransactionIndexRequest(TxHistoryWrapper txHistoryWrapper) {
+        IndexRequest indexRequest = null;
         XContentBuilder source = ElasticsearchUtils.getTransactionSource(txHistoryWrapper);
-        return new IndexRequest(ES_INDEX_PUBNET, ES_TYPE_TRANSACTION, txHistoryWrapper.getTransactionId()).source(source);
+        if (source != null) {
+            indexRequest = new IndexRequest(ES_INDEX_PUBNET, ES_TYPE_TRANSACTION, txHistoryWrapper.getTransactionId()).source(source);
+        }
+        return indexRequest;
     }
 
     public IndexRequest getPaymentIndexRequest(TxHistoryWrapper txHistoryWrapper, int index, PaymentOp paymentOp) {
@@ -136,6 +148,24 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
         XContentBuilder source = ElasticsearchUtils.getPaymentSource(txHistoryWrapper, paymentOp);
         if (source != null) {
             indexRequest = new IndexRequest(ES_INDEX_PUBNET, ES_TYPE_PAYMENT, txHistoryWrapper.getTransactionId() + "-" + index).source(source);
+        }
+        return indexRequest;
+    }
+
+    private IndexRequest getCreateAccountIndexRequest(TxHistoryWrapper txHistoryWrapper, int operationIndex, CreateAccountOp createAccountOp) {
+        IndexRequest indexRequest = null;
+        XContentBuilder source = ElasticsearchUtils.getCreateAccountSource(txHistoryWrapper, operationIndex, createAccountOp);
+        if (source != null) {
+            indexRequest = new IndexRequest(ES_INDEX_PUBNET, ES_TYPE_CREATE_ACCOUNT, txHistoryWrapper.getTransactionId() + "-" + operationIndex).source(source);
+        }
+        return indexRequest;
+    }
+
+    private IndexRequest getPathPaymentIndexRequest(TxHistoryWrapper txHistoryWrapper, int operationIndex, PathPaymentOp pathPaymentOp) {
+        IndexRequest indexRequest = null;
+        XContentBuilder source = ElasticsearchUtils.getPathPaymentSource(txHistoryWrapper, pathPaymentOp);
+        if (source != null) {
+            indexRequest = new IndexRequest(ES_INDEX_PUBNET, ES_TYPE_PATH_PAYMENT, txHistoryWrapper.getTransactionId() + "-" + operationIndex).source(source);
         }
         return indexRequest;
     }
