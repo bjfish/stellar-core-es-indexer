@@ -117,7 +117,7 @@ public class ElasticsearchUtils {
             source.field("asset_type", "credit_alphanum4");
         } else {
             source.field("asset_issuer", accountIdToString(asset.getAlphaNum12().getIssuer()));
-            source.field("asset_code", new String(asset.getAlphaNum4().getAssetCode()));
+            source.field("asset_code", new String(asset.getAlphaNum12().getAssetCode()));
             source.field("asset_type", "credit_alphanum12");
         }
     }
