@@ -21,6 +21,10 @@ The number of seconds to wait before polling the database for new ledgers.
 If set to 0, indexing will only run once.
 Default Value is 0.
 
+### LAST_LEDGER_INDEXED
+ The indexing will start with a query for the txhistory rows with a `legerseq` greater than `LAST_LEDGER_INDEXED`. The log output contains the last ledgerseq that was indexed which could be used with this configuration to pause/resume indexing. 
+ To do a full indexing, this could be set to 0.
+
 ## Building
 Run `./gradlew shadowJar`
 

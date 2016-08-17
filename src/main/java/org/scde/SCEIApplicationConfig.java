@@ -14,6 +14,7 @@ public class SCEIApplicationConfig {
     private static final Logger logger = LoggerFactory.getLogger(SCEIApplicationConfig.class);
 
     private int refreshInterval;
+    private int lastLedgerIndexed;
 
     // Database
     private String databaseServerName;
@@ -35,6 +36,14 @@ public class SCEIApplicationConfig {
 
     public void setRefreshInterval(int refreshInterval) {
         this.refreshInterval = refreshInterval;
+    }
+
+    public int getLastLedgerIndexed() {
+        return lastLedgerIndexed;
+    }
+
+    public void setLastLedgerIndexed(int lastLedgerIndexed) {
+        this.lastLedgerIndexed = lastLedgerIndexed;
     }
 
     public String getDatabaseServerName() {
@@ -130,6 +139,9 @@ public class SCEIApplicationConfig {
 
             String refreshInterval = getPropertyWithError(prop, "REFRESH_INTERVAL");
             config.setRefreshInterval(Integer.valueOf(refreshInterval));
+
+            String lastLedgerIndexed = getPropertyWithError(prop, "LAST_LEDGER_INDEXED");
+            config.setLastLedgerIndexed(Integer.valueOf(lastLedgerIndexed));
 
             config.setDatabaseServerName(getPropertyWithError(prop, "DB_SERVER_NAME"));
             config.setDatabaseName(getPropertyWithError(prop, "DB_NAME"));

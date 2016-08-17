@@ -45,7 +45,7 @@ public class StellarCoreElasticsearchIndexer {
 
         final int refreshIntervalSeconds = config.getRefreshInterval();
 
-        int lastLedgerSequenceNumber = 0;
+        int lastLedgerSequenceNumber = config.getLastLedgerIndexed();
 
         do {
             List<TxHistoryWrapper> txHistories = decodeAndMap(txHistoryDAO.findTxHistories(lastLedgerSequenceNumber, BATCH_SIZE));
