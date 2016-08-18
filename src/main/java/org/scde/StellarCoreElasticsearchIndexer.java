@@ -102,6 +102,8 @@ public class StellarCoreElasticsearchIndexer {
                 txHistories = decodeAndMap(txHistoryDAO.findTxHistories(lastLedgerSequenceNumber, BATCH_SIZE));
             }
 
+            txHistoryVisitor.afterBatchesProcessed();
+
             if (refreshIntervalSeconds != 0) {
                 try {
                     logger.info("Indexed through ledger " + lastLedgerSequenceNumber + ", waiting " + refreshIntervalSeconds + " to poll again");

@@ -57,12 +57,16 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
                 public void afterBulk(long executionId,
                                       BulkRequest request,
                                       BulkResponse response) {
+                    if(response.hasFailures()){
+                        logger.equals("Bulk requests errors:" + response.buildFailureMessage());
+                    }
                 }
 
                 @Override
                 public void afterBulk(long executionId,
                                       BulkRequest request,
                                       Throwable failure) {
+                    logger.error("Bulk request error", failure);
                 }
             })
             .build();
@@ -156,6 +160,11 @@ public class ElasticsearchTxHistoryVisitor implements TxHistoryVisitor {
         if (indexRequest != null) {
             bulkProcessor.add(indexRequest);
         }
+    }
+
+    @Override
+    public void afterBatchesProcessed() {
+        bulkProcessor.flush();
     }
 
     private IndexRequest getManageDataIndexRequest(TxHistoryWrapper txHistoryWrapper, int operationIndex, ManageDataOp manageDataOp) {

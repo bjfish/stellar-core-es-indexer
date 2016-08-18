@@ -37,5 +37,7 @@ public interface TxHistoryVisitor {
 
     public void visitManageData(ManageDataOp manageDataOp, TxHistoryWrapper txHistoryWrapper, int operationIndex);
 
+    public void afterBatchesProcessed();
+
     public void finished();
 }
