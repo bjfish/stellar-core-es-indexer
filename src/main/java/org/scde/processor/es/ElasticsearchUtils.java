@@ -11,6 +11,7 @@ import org.scde.model.TxHistoryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.stellar.sdk.KeyPair;
+import org.stellar.sdk.MemoHash;
 import org.stellar.sdk.xdr.AccountID;
 import org.stellar.sdk.xdr.AllowTrustOp;
 import org.stellar.sdk.xdr.Asset;
@@ -18,9 +19,11 @@ import org.stellar.sdk.xdr.AssetType;
 import org.stellar.sdk.xdr.ChangeTrustOp;
 import org.stellar.sdk.xdr.CreateAccountOp;
 import org.stellar.sdk.xdr.CreatePassiveOfferOp;
+import org.stellar.sdk.xdr.Hash;
 import org.stellar.sdk.xdr.Int64;
 import org.stellar.sdk.xdr.ManageDataOp;
 import org.stellar.sdk.xdr.ManageOfferOp;
+import org.stellar.sdk.xdr.MemoType;
 import org.stellar.sdk.xdr.PathPaymentOp;
 import org.stellar.sdk.xdr.PaymentOp;
 import org.stellar.sdk.xdr.SetOptionsOp;
@@ -66,6 +69,7 @@ public class ElasticsearchUtils {
                 .field("amount", scaleAmount(paymentOp.getAmount()))
                 .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
                 .field("to", accountIdToString(paymentOp.getDestination()));
+            setMemoFields(source, txHistoryWrapper);
             setAssetFields(source, paymentOp.getAsset());
             source.endObject();
         } catch (IOException e) {
@@ -86,6 +90,7 @@ public class ElasticsearchUtils {
                 .field("amount", scaleAmount(pathPaymentOp.getDestAmount())) // TODO Normalize with horizon, add send amount, idea -> add send amount to payment
                 .field("source_account", accountIdToString(txHistoryWrapper.getTransactionEnvelope().getTx().getSourceAccount()))
                 .field("to", accountIdToString(pathPaymentOp.getDestination()));
+            setMemoFields(source, txHistoryWrapper);
             setAssetFields(source, pathPaymentOp.getDestAsset());
             source.endObject();
         } catch (IOException e) {
@@ -235,6 +240,42 @@ public class ElasticsearchUtils {
             source.field("asset_code", new String(asset.getAlphaNum12().getAssetCode()));
             source.field("asset_type", "credit_alphanum12");
         }
+    }
+
+    private static void setMemoFields(XContentBuilder source, TxHistoryWrapper txHistoryWrapper) throws IOException {
+        MemoType memoType = txHistoryWrapper.getTransactionEnvelope().getTx().getMemo().getDiscriminant();
+        if(memoType == MemoType.MEMO_NONE){
+            source.field("memo_type", "none");
+        } else {
+            String memoTypeString;
+            String memo;
+            switch (memoType){
+                case MEMO_HASH:
+                    memoTypeString = "hash";
+                    memo = hashToString(txHistoryWrapper.getTransactionEnvelope().getTx().getMemo().getHash());
+                    break;
+                case MEMO_ID:
+                    memoTypeString = "id";
+                    memo =  txHistoryWrapper.getTransactionEnvelope().getTx().getMemo().getId().getUint64().toString();
+                    break;
+                case MEMO_TEXT:
+                    memoTypeString = "text";
+                    memo = txHistoryWrapper.getTransactionEnvelope().getTx().getMemo().getText();
+                    break;
+                case MEMO_RETURN:
+                    memoTypeString = "return";
+                    memo = hashToString(txHistoryWrapper.getTransactionEnvelope().getTx().getMemo().getRetHash());
+                    break;
+                default:
+                    throw new RuntimeException("Unknown memo type");
+            }
+            source.field("memo_type", memoTypeString);
+            source.field("memo", memo);
+        }
+    }
+
+    public static String hashToString(Hash hash){
+       return  new MemoHash(hash.getHash()).getTrimmedHexValue() ;
     }
 
     public static String getStatus(TxHistoryWrapper txHistoryWrapper) {
